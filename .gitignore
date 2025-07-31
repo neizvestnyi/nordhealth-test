@@ -1,0 +1,68 @@
+# .NET
+bin/
+obj/
+out/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+*.tlog
+*.vspscc
+*.vssscc
+.vs/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+*.vscode/
+
+# Package files
+*.nupkg
+*.snupkg
+
+# NuGet
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Core
+appsettings.Development.json
+wwwroot/
+
+# macOS
+.DS_Store
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# User secrets
+secrets.json
