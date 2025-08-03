@@ -78,12 +78,17 @@ public class AppointmentController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var appointments = _appointmentService.GetAppointmentsByVeterinarianAndDateRange(
+        var result = _appointmentService.GetAppointmentsByVeterinarianAndDateRange(
             veterinarianId, 
             startDate, 
             endDate);
 
-        return Ok(appointments);
+        if (!result.IsSuccess)
+        {
+            return Helpers.ResultHelper.ToActionResult(result);
+        }
+
+        return Ok(result.Data);
     }
 
     /// <summary>

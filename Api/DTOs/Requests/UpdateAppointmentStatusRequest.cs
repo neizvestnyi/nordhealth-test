@@ -12,6 +12,6 @@ public class UpdateAppointmentStatusRequest
     /// The new status for the appointment
     /// </summary>
     [Required(ErrorMessage = "Status is required")]
-    [EnumDataType(typeof(AppointmentStatus), ErrorMessage = "Invalid appointment status")]
-    public AppointmentStatus Status { get; set; }
+    [EnumDataType(typeof(AppointmentStatusEnum), ErrorMessage = "Invalid appointment status")]
+    public AppointmentStatusEnum Status { get; set; }
 }

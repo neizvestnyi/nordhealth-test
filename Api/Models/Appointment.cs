@@ -1,16 +1,5 @@
 namespace Api.Models;
 
-public enum AppointmentStatus
-{
-    Scheduled,
-    [Obsolete("Use Scheduled instead. This status is being migrated.")]
-    InProgress,
-    Completed,
-    Cancelled,
-    [Obsolete("Use Cancelled instead. This status is being migrated.")]
-    NoShow
-}
-
 public class Appointment
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -25,7 +14,7 @@ public class Appointment
 
     public required Guid VeterinarianId { get; set; }
 
-    public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
+    public AppointmentStatusEnum Status { get; set; } = AppointmentStatusEnum.Scheduled;
 
     public string? Notes { get; set; }
 

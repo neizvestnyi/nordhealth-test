@@ -7,22 +7,22 @@ public static class AppointmentStatusHelper
     /// <summary>
     /// Valid statuses according to business requirements
     /// </summary>
-    private static readonly HashSet<AppointmentStatus> ValidStatuses = new()
+    private static readonly HashSet<AppointmentStatusEnum> ValidStatuses = new()
     {
-        AppointmentStatus.Scheduled,
-        AppointmentStatus.Completed,
-        AppointmentStatus.Cancelled
+        AppointmentStatusEnum.Scheduled,
+        AppointmentStatusEnum.Completed,
+        AppointmentStatusEnum.Cancelled
     };
 
     /// <summary>
     /// Migrates old status values to valid ones according to business rules
     /// </summary>
-    public static AppointmentStatus MigrateStatus(AppointmentStatus currentStatus)
+    public static AppointmentStatusEnum MigrateStatus(AppointmentStatusEnum currentStatus)
     {
         return currentStatus switch
         {
-            AppointmentStatus.InProgress => AppointmentStatus.Scheduled,
-            AppointmentStatus.NoShow => AppointmentStatus.Cancelled,
+            AppointmentStatusEnum.InProgress => AppointmentStatusEnum.Scheduled,
+            AppointmentStatusEnum.NoShow => AppointmentStatusEnum.Cancelled,
             _ => currentStatus
         };
     }
@@ -30,7 +30,7 @@ public static class AppointmentStatusHelper
     /// <summary>
     /// Checks if a status is valid according to business requirements
     /// </summary>
-    public static bool IsValidStatus(AppointmentStatus status)
+    public static bool IsValidStatus(AppointmentStatusEnum status)
     {
         return ValidStatuses.Contains(status);
     }

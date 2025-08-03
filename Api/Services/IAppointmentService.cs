@@ -6,6 +6,6 @@ namespace Api.Services;
 
 public interface IAppointmentService
 {
-    IEnumerable<AppointmentSummaryResponse> GetAppointmentsByVeterinarianAndDateRange(Guid veterinarianId, DateTime startDate, DateTime endDate);
-    Result UpdateAppointmentStatus(Guid appointmentId, AppointmentStatus newStatus, DateTime currentTime);
+    Result<IEnumerable<AppointmentSummaryResponse>> GetAppointmentsByVeterinarianAndDateRange(Guid veterinarianId, DateTime startDate, DateTime endDate);
+    Result UpdateAppointmentStatus(Guid appointmentId, AppointmentStatusEnum newStatus, DateTime currentTime);
 }
