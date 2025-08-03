@@ -1,14 +1,5 @@
 namespace Api.Models;
 
-public enum AppointmentStatus
-{
-    Scheduled,
-    InProgress,
-    Completed,
-    Cancelled,
-    NoShow
-}
-
 public class Appointment
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -23,7 +14,7 @@ public class Appointment
 
     public required Guid VeterinarianId { get; set; }
 
-    public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
+    public AppointmentStatusEnum Status { get; set; } = AppointmentStatusEnum.Scheduled;
 
     public string? Notes { get; set; }
 

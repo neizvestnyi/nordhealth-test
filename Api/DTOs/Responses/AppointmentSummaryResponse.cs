@@ -35,5 +35,5 @@ public class AppointmentSummaryResponse
     /// <summary>
     /// Current status of the appointment
     /// </summary>
-    public AppointmentStatus Status { get; set; }
+    public AppointmentStatusEnum Status { get; set; }
 }

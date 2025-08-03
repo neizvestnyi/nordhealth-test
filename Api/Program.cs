@@ -13,6 +13,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // Register application services
+builder.Services.AddScoped<INotificationService, MockNotificationService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 
 builder.Services.AddControllers()
