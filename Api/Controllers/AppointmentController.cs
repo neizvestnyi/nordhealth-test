@@ -1,4 +1,5 @@
 using Api.Data;
+using Api.DTOs.Requests;
 using Api.DTOs.Responses;
 using Api.Models;
 using Api.Services;
@@ -83,5 +84,40 @@ public class AppointmentController : ControllerBase
             endDate);
 
         return Ok(appointments);
+    }
+
+    /// <summary>
+    /// Updates the status of an appointment
+    /// </summary>
+    /// <param name="id">The appointment ID</param>
+    /// <param name="request">The status update request</param>
+    /// <returns>Success or error message</returns>
+    /// <response code="200">Status updated successfully</response>
+    /// <response code="400">Invalid request or business rule violation</response>
+    /// <response code="404">Appointment not found</response>
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult UpdateAppointmentStatus(
+        [FromRoute] Guid id,
+        [FromBody] UpdateAppointmentStatusRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var result = _appointmentService.UpdateAppointmentStatus(
+            id, 
+            request.Status, 
+            DateTime.Now);
+
+        if (!result.IsSuccess)
+        {
+            return Helpers.ResultHelper.ToActionResult(result);
+        }
+
+        return Ok(new { message = "Appointment status updated successfully" });
     }
 }
