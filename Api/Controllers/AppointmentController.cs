@@ -1,6 +1,9 @@
 using Api.Data;
+using Api.DTOs.Responses;
 using Api.Models;
+using Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace Api.Controllers;
 
@@ -8,6 +11,12 @@ namespace Api.Controllers;
 [Route("api/[controller]")]
 public class AppointmentController : ControllerBase
 {
+    private readonly IAppointmentService _appointmentService;
+
+    public AppointmentController(IAppointmentService appointmentService)
+    {
+        _appointmentService = appointmentService;
+    }
     [HttpPost]
     public ActionResult<Animal> CreateAppointment([FromBody] Appointment appointment)
     {
@@ -37,5 +46,42 @@ public class AppointmentController : ControllerBase
             return NotFound();
         }
         return Ok(appointment);
+    }
+
+    /// <summary>
+    /// Retrieves appointments for a specific veterinarian within a date range
+    /// </summary>
+    /// <param name="veterinarianId">The unique identifier of the veterinarian</param>
+    /// <param name="startDate">Start date of the search range</param>
+    /// <param name="endDate">End date of the search range</param>
+    /// <returns>List of appointments with animal and owner information</returns>
+    /// <response code="200">Returns the list of appointments</response>
+    /// <response code="400">Invalid request parameters or date range</response>
+    [HttpGet("veterinarian/{veterinarianId}/appointments")]
+    [ProducesResponseType(typeof(IEnumerable<AppointmentSummaryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public ActionResult<IEnumerable<AppointmentSummaryResponse>> GetVeterinarianAppointments(
+        [FromRoute] Guid veterinarianId,
+        [FromQuery, Required] DateTime startDate,
+        [FromQuery, Required] DateTime endDate)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        // Validate date range
+        if (endDate < startDate)
+        {
+            ModelState.AddModelError("endDate", "End date must be greater than or equal to start date");
+            return BadRequest(ModelState);
+        }
+
+        var appointments = _appointmentService.GetAppointmentsByVeterinarianAndDateRange(
+            veterinarianId, 
+            startDate, 
+            endDate);
+
+        return Ok(appointments);
     }
 }
