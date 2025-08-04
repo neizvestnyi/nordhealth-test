@@ -1,4 +1,5 @@
 using Api.Common;
+using Api.DTOs.Requests;
 using Api.DTOs.Responses;
 using Api.Helpers;
 using Api.Models;
@@ -15,6 +16,63 @@ public class AppointmentService : IAppointmentService
     {
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
+    }
+
+    public async Task<Result<Appointment>> CreateAppointmentAsync(CreateAppointmentRequest request)
+    {
+        try
+        {
+            if (request == null)
+            {
+                return Result<Appointment>.Failure("Appointment request cannot be null.", ErrorTypeEnum.ValidationError);
+            }
+
+            if (request.AnimalId == Guid.Empty || request.VeterinarianId == Guid.Empty)
+            {
+                return Result<Appointment>.Failure("AnimalId and VeterinarianId are required.", ErrorTypeEnum.ValidationError);
+            }
+
+            var appointment = new Appointment
+            {
+                Id = Guid.NewGuid(),
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                AnimalId = request.AnimalId,
+                VeterinarianId = request.VeterinarianId,
+                Status = request.Status,
+                Notes = request.Notes
+            };
+
+            await _unitOfWork.Appointments.AddAsync(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            // Reload with navigation properties
+            var createdAppointment = await _unitOfWork.Appointments.GetByIdAsync(appointment.Id);
+
+            return Result<Appointment>.Success(createdAppointment!);
+        }
+        catch (Exception ex)
+        {
+            return Result<Appointment>.Failure($"An error occurred while creating appointment: {ex.Message}", ErrorTypeEnum.InternalError);
+        }
+    }
+
+    public async Task<Result<Appointment>> GetAppointmentByIdAsync(Guid id)
+    {
+        try
+        {
+            var appointment = await _unitOfWork.Appointments.GetByIdAsync(id);
+            if (appointment == null)
+            {
+                return Result<Appointment>.Failure("Appointment not found.", ErrorTypeEnum.NotFound);
+            }
+
+            return Result<Appointment>.Success(appointment);
+        }
+        catch (Exception ex)
+        {
+            return Result<Appointment>.Failure($"An error occurred while retrieving appointment: {ex.Message}", ErrorTypeEnum.InternalError);
+        }
     }
     public async Task<Result<IEnumerable<AppointmentSummaryResponse>>> GetAppointmentsByVeterinarianAndDateRangeAsync(Guid veterinarianId, DateTime startDate, DateTime endDate)
     {

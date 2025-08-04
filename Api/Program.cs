@@ -35,6 +35,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddScoped<INotificationService, MockNotificationService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<IAnimalService, AnimalService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
