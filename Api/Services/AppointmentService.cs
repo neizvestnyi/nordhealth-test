@@ -4,6 +4,7 @@ using Api.DTOs.Responses;
 using Api.Helpers;
 using Api.Models;
 using Api.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace Api.Services;
 
@@ -11,11 +12,16 @@ public class AppointmentService : IAppointmentService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notificationService;
+    private readonly ILogger<AppointmentService> _logger;
 
-    public AppointmentService(IUnitOfWork unitOfWork, INotificationService notificationService)
+    public AppointmentService(
+        IUnitOfWork unitOfWork, 
+        INotificationService notificationService,
+        ILogger<AppointmentService> logger)
     {
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<Result<Appointment>> CreateAppointmentAsync(CreateAppointmentRequest request)
@@ -53,6 +59,7 @@ public class AppointmentService : IAppointmentService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while creating appointment for Animal {AnimalId}", request?.AnimalId);
             return Result<Appointment>.Failure($"An error occurred while creating appointment: {ex.Message}", ErrorTypeEnum.InternalError);
         }
     }
@@ -71,9 +78,11 @@ public class AppointmentService : IAppointmentService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while retrieving appointment {AppointmentId}", id);
             return Result<Appointment>.Failure($"An error occurred while retrieving appointment: {ex.Message}", ErrorTypeEnum.InternalError);
         }
     }
+
     public async Task<Result<IEnumerable<AppointmentSummaryResponse>>> GetAppointmentsByVeterinarianAndDateRangeAsync(Guid veterinarianId, DateTime startDate, DateTime endDate)
     {
         try
@@ -96,6 +105,7 @@ public class AppointmentService : IAppointmentService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while retrieving appointments for Veterinarian {VeterinarianId}", veterinarianId);
             return Result<IEnumerable<AppointmentSummaryResponse>>.Failure($"An error occurred while retrieving appointments: {ex.Message}", ErrorTypeEnum.InternalError);
         }
     }
@@ -148,6 +158,7 @@ public class AppointmentService : IAppointmentService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while updating appointment {AppointmentId} status", appointmentId);
             return Result.Failure($"An error occurred while updating appointment status: {ex.Message}", ErrorTypeEnum.InternalError);
         }
     }

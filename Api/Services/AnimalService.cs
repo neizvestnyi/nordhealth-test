@@ -2,16 +2,19 @@ using Api.Common;
 using Api.DTOs.Requests;
 using Api.Models;
 using Api.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace Api.Services;
 
 public class AnimalService : IAnimalService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<AnimalService> _logger;
 
-    public AnimalService(IUnitOfWork unitOfWork)
+    public AnimalService(IUnitOfWork unitOfWork, ILogger<AnimalService> logger)
     {
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Result<Animal>> CreateAnimalAsync(CreateAnimalRequest request)
@@ -46,6 +49,7 @@ public class AnimalService : IAnimalService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while creating animal with name '{AnimalName}'", request?.Name);
             return Result<Animal>.Failure($"An error occurred while creating animal: {ex.Message}", ErrorTypeEnum.InternalError);
         }
     }
@@ -64,6 +68,7 @@ public class AnimalService : IAnimalService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while retrieving animal {AnimalId}", id);
             return Result<Animal>.Failure($"An error occurred while retrieving animal: {ex.Message}", ErrorTypeEnum.InternalError);
         }
     }
@@ -85,6 +90,7 @@ public class AnimalService : IAnimalService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while deleting animal {AnimalId}", id);
             return Result.Failure($"An error occurred while deleting animal: {ex.Message}", ErrorTypeEnum.InternalError);
         }
     }
