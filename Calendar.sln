@@ -1,11 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# 
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{EA7E910D-D5FE-4EDD-ADB4-F4C567C74020}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6DD0F012-026F-4869-829D-CA527B7A3892}"
 	ProjectSection(SolutionItems) = preProject
 		compose.yaml = compose.yaml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api.Tests", "Api.Tests\Api.Tests.csproj", "{241B8353-CE95-4981-A02E-99950969E5C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,5 +20,9 @@ Global
 		{EA7E910D-D5FE-4EDD-ADB4-F4C567C74020}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA7E910D-D5FE-4EDD-ADB4-F4C567C74020}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA7E910D-D5FE-4EDD-ADB4-F4C567C74020}.Release|Any CPU.Build.0 = Release|Any CPU
+		{241B8353-CE95-4981-A02E-99950969E5C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{241B8353-CE95-4981-A02E-99950969E5C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{241B8353-CE95-4981-A02E-99950969E5C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{241B8353-CE95-4981-A02E-99950969E5C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

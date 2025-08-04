@@ -1,67 +1,68 @@
 using Api.DTOs.Requests;
 using Api.DTOs.Responses;
 using Api.Models;
-using Api.Repositories;
 using Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace Api.Controllers;
 
+/// <summary>
+/// Manages veterinary appointments and scheduling
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Produces("application/json")]
 public class AppointmentController : ControllerBase
 {
     private readonly IAppointmentService _appointmentService;
-    private readonly IUnitOfWork _unitOfWork;
 
-    public AppointmentController(IAppointmentService appointmentService, IUnitOfWork unitOfWork)
+    public AppointmentController(IAppointmentService appointmentService)
     {
         _appointmentService = appointmentService;
-        _unitOfWork = unitOfWork;
     }
+    /// <summary>
+    /// Creates a new appointment
+    /// </summary>
+    /// <param name="request">Appointment details including animal, veterinarian, and time</param>
+    /// <returns>The created appointment with full details</returns>
+    /// <response code="201">Appointment created successfully</response>
+    /// <response code="400">Invalid request data or business rule violation</response>
     [HttpPost]
+    [ProducesResponseType(typeof(Appointment), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<Appointment>> CreateAppointment([FromBody] CreateAppointmentRequest request)
     {
-        if (request == null)
-        {
-            return BadRequest("Appointment request cannot be null.");
-        }
-
-        if (request.AnimalId == Guid.Empty || request.VeterinarianId == Guid.Empty)
-        {
-            return BadRequest("AnimalId and VeterinarianId are required.");
-        }
-
-        var appointment = new Appointment
-        {
-            Id = Guid.NewGuid(),
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
-            AnimalId = request.AnimalId,
-            VeterinarianId = request.VeterinarianId,
-            Status = request.Status,
-            Notes = request.Notes
-        };
-
-        await _unitOfWork.Appointments.AddAsync(appointment);
-        await _unitOfWork.SaveChangesAsync();
+        var result = await _appointmentService.CreateAppointmentAsync(request);
         
-        // Reload with navigation properties
-        var createdAppointment = await _unitOfWork.Appointments.GetByIdAsync(appointment.Id);
+        if (!result.IsSuccess)
+        {
+            return Helpers.ResultHelper.ToActionResult(result);
+        }
 
-        return CreatedAtAction(nameof(GetAppointment), new { id = appointment.Id }, createdAppointment);
+        return CreatedAtAction(nameof(GetAppointment), new { id = result.Data!.Id }, result.Data);
     }
 
+    /// <summary>
+    /// Retrieves an appointment by ID
+    /// </summary>
+    /// <param name="id">The unique identifier of the appointment</param>
+    /// <returns>Appointment details with animal and veterinarian information</returns>
+    /// <response code="200">Returns the requested appointment</response>
+    /// <response code="404">Appointment not found</response>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(Appointment), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Appointment>> GetAppointment(Guid id)
     {
-        var appointment = await _unitOfWork.Appointments.GetByIdAsync(id);
-        if (appointment == null)
+        var result = await _appointmentService.GetAppointmentByIdAsync(id);
+        
+        if (!result.IsSuccess)
         {
-            return NotFound();
+            return Helpers.ResultHelper.ToActionResult(result);
         }
-        return Ok(appointment);
+
+        return Ok(result.Data);
     }
 
     /// <summary>
