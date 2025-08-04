@@ -8,18 +8,20 @@ public class Appointment
 
     public required DateTime EndTime { get; set; }
 
-    public required Guid AnimalId { get; set; }
-
-    public required Guid CustomerId { get; set; }
-
-    public required Guid VeterinarianId { get; set; }
-
     public AppointmentStatusEnum Status { get; set; } = AppointmentStatusEnum.Scheduled;
 
     public string? Notes { get; set; }
+    
+    public required Guid AnimalId { get; set; }
+    
+    public required Guid VeterinarianId { get; set; }
+    
+    public Animal Animal { get; set; } = null!;
+    
+    public Veterinarian Veterinarian { get; set; } = null!;
 
     // Constructor that satisfies all required properties
-    public Appointment(DateTime startTime, DateTime endTime, Guid animalId, Guid customerId, Guid veterinarianId)
+    public Appointment(DateTime startTime, DateTime endTime, Guid animalId, Guid veterinarianId)
     {
         if (endTime <= startTime)
         {
@@ -29,11 +31,10 @@ public class Appointment
         StartTime = startTime;
         EndTime = endTime;
         AnimalId = animalId;
-        CustomerId = customerId;
         VeterinarianId = veterinarianId;
     }
 
-    // Required for object initializer syntax with required properties
+    // Required for EF Core and object initializer syntax
     [Obsolete("Use constructor or object initializer with all required properties")]
     public Appointment() { }
 }

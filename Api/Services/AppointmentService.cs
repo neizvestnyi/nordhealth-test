@@ -1,43 +1,37 @@
 using Api.Common;
-using Api.Data;
 using Api.DTOs.Responses;
 using Api.Helpers;
 using Api.Models;
+using Api.Repositories;
 
 namespace Api.Services;
 
 public class AppointmentService : IAppointmentService
 {
+    private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notificationService;
 
-    public AppointmentService(INotificationService notificationService)
+    public AppointmentService(IUnitOfWork unitOfWork, INotificationService notificationService)
     {
+        _unitOfWork = unitOfWork;
         _notificationService = notificationService;
     }
-    public Result<IEnumerable<AppointmentSummaryResponse>> GetAppointmentsByVeterinarianAndDateRange(Guid veterinarianId, DateTime startDate, DateTime endDate)
+    public async Task<Result<IEnumerable<AppointmentSummaryResponse>>> GetAppointmentsByVeterinarianAndDateRangeAsync(Guid veterinarianId, DateTime startDate, DateTime endDate)
     {
         try
         {
-            var filteredAppointments = AppointmentData.Appointments
-                .Where(a => a.VeterinarianId == veterinarianId)
-                .Where(a => DateRangeHelper.IsOverlapping(a.StartTime, a.EndTime, startDate, endDate))
-                .ToList();
+            var appointments = await _unitOfWork.Appointments
+                .GetByVeterinarianAndDateRangeAsync(veterinarianId, startDate, endDate);
 
-            var appointmentResponses = filteredAppointments.Select(appointment =>
+            var appointmentResponses = appointments.Select(appointment => new AppointmentSummaryResponse
             {
-                var animal = AnimalData.Animals.FirstOrDefault(an => an.Id == appointment.AnimalId);
-                
-                return new AppointmentSummaryResponse
-                {
-                    Id = appointment.Id,
-                    StartTime = appointment.StartTime,
-                    EndTime = appointment.EndTime,
-                    AnimalName = animal?.Name ?? "Unknown",
-                    OwnerName = animal?.OwnerName ?? "Unknown",
-                    Status = appointment.Status
-                };
+                Id = appointment.Id,
+                StartTime = appointment.StartTime,
+                EndTime = appointment.EndTime,
+                AnimalName = appointment.Animal?.Name ?? "Unknown",
+                OwnerName = appointment.Animal?.Owner?.Name ?? "Unknown",
+                Status = appointment.Status
             })
-            .OrderBy(a => a.StartTime)
             .ToList();
 
             return Result<IEnumerable<AppointmentSummaryResponse>>.Success(appointmentResponses);
@@ -48,11 +42,11 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-    public Result UpdateAppointmentStatus(Guid appointmentId, AppointmentStatusEnum newStatus, DateTime currentTime)
+    public async Task<Result> UpdateAppointmentStatusAsync(Guid appointmentId, AppointmentStatusEnum newStatus, DateTime currentTime)
     {
         try
         {
-            var appointment = AppointmentData.Appointments.FirstOrDefault(a => a.Id == appointmentId);
+            var appointment = await _unitOfWork.Appointments.GetByIdAsync(appointmentId);
             if (appointment == null)
             {
                 return Result.Failure("Appointment not found", ErrorTypeEnum.NotFound);
@@ -77,15 +71,17 @@ public class AppointmentService : IAppointmentService
             var previousStatus = appointment.Status;
             appointment.Status = migratedStatus;
 
+            await _unitOfWork.Appointments.UpdateAsync(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
             // Send notification if appointment was cancelled
             if (migratedStatus == AppointmentStatusEnum.Cancelled && previousStatus != AppointmentStatusEnum.Cancelled)
             {
-                var animal = AnimalData.Animals.FirstOrDefault(a => a.Id == appointment.AnimalId);
-                if (animal != null)
+                if (appointment.Animal?.Owner != null)
                 {
                     _notificationService.SendAppointmentCancellationEmail(
-                        animal.OwnerEmail,
-                        animal.Name,
+                        appointment.Animal.Owner.Email,
+                        appointment.Animal.Name,
                         appointment.StartTime);
                 }
             }

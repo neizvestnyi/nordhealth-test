@@ -1,7 +1,7 @@
-using Api.Data;
 using Api.DTOs.Requests;
 using Api.DTOs.Responses;
 using Api.Models;
+using Api.Repositories;
 using Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -13,35 +13,50 @@ namespace Api.Controllers;
 public class AppointmentController : ControllerBase
 {
     private readonly IAppointmentService _appointmentService;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public AppointmentController(IAppointmentService appointmentService)
+    public AppointmentController(IAppointmentService appointmentService, IUnitOfWork unitOfWork)
     {
         _appointmentService = appointmentService;
+        _unitOfWork = unitOfWork;
     }
     [HttpPost]
-    public ActionResult<Animal> CreateAppointment([FromBody] Appointment appointment)
+    public async Task<ActionResult<Appointment>> CreateAppointment([FromBody] CreateAppointmentRequest request)
     {
-        if (appointment == null)
+        if (request == null)
         {
-            return BadRequest("Appointment cannot be null.");
+            return BadRequest("Appointment request cannot be null.");
         }
 
-        if (appointment.AnimalId == Guid.Empty || appointment.CustomerId == Guid.Empty)
+        if (request.AnimalId == Guid.Empty || request.VeterinarianId == Guid.Empty)
         {
-            return BadRequest("AnimalId and CustomerId are required.");
+            return BadRequest("AnimalId and VeterinarianId are required.");
         }
 
-        appointment.Id = Guid.NewGuid();
+        var appointment = new Appointment
+        {
+            Id = Guid.NewGuid(),
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+            AnimalId = request.AnimalId,
+            VeterinarianId = request.VeterinarianId,
+            Status = request.Status,
+            Notes = request.Notes
+        };
 
-        AppointmentData.Appointments.Add(appointment);
+        await _unitOfWork.Appointments.AddAsync(appointment);
+        await _unitOfWork.SaveChangesAsync();
+        
+        // Reload with navigation properties
+        var createdAppointment = await _unitOfWork.Appointments.GetByIdAsync(appointment.Id);
 
-        return CreatedAtAction(nameof(GetAppointment), new { id = appointment.Id }, appointment);
+        return CreatedAtAction(nameof(GetAppointment), new { id = appointment.Id }, createdAppointment);
     }
 
     [HttpGet("{id}")]
-    public ActionResult<Appointment> GetAppointment(Guid id)
+    public async Task<ActionResult<Appointment>> GetAppointment(Guid id)
     {
-        var appointment = AppointmentData.Appointments.FirstOrDefault(a => a.Id == id);
+        var appointment = await _unitOfWork.Appointments.GetByIdAsync(id);
         if (appointment == null)
         {
             return NotFound();
@@ -61,7 +76,7 @@ public class AppointmentController : ControllerBase
     [HttpGet("veterinarian/{veterinarianId}/appointments")]
     [ProducesResponseType(typeof(IEnumerable<AppointmentSummaryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<IEnumerable<AppointmentSummaryResponse>> GetVeterinarianAppointments(
+    public async Task<ActionResult<IEnumerable<AppointmentSummaryResponse>>> GetVeterinarianAppointments(
         [FromRoute] Guid veterinarianId,
         [FromQuery, Required] DateTime startDate,
         [FromQuery, Required] DateTime endDate)
@@ -78,7 +93,7 @@ public class AppointmentController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = _appointmentService.GetAppointmentsByVeterinarianAndDateRange(
+        var result = await _appointmentService.GetAppointmentsByVeterinarianAndDateRangeAsync(
             veterinarianId, 
             startDate, 
             endDate);
@@ -104,7 +119,7 @@ public class AppointmentController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult UpdateAppointmentStatus(
+    public async Task<ActionResult> UpdateAppointmentStatus(
         [FromRoute] Guid id,
         [FromBody] UpdateAppointmentStatusRequest request)
     {
@@ -113,7 +128,7 @@ public class AppointmentController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = _appointmentService.UpdateAppointmentStatus(
+        var result = await _appointmentService.UpdateAppointmentStatusAsync(
             id, 
             request.Status, 
             DateTime.Now);
